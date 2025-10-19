@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       drinks: {
         Row: {
+          category: string
           created_at: string | null
           id: string
           image_url: string | null
@@ -23,6 +24,7 @@ export type Database = {
           price: number
         }
         Insert: {
+          category?: string
           created_at?: string | null
           id?: string
           image_url?: string | null
@@ -30,6 +32,7 @@ export type Database = {
           price: number
         }
         Update: {
+          category?: string
           created_at?: string | null
           id?: string
           image_url?: string | null
@@ -42,19 +45,25 @@ export type Database = {
         Row: {
           drink_id: string
           id: string
+          quantity: number
           timestamp: string | null
+          total_price: number
           user_id: string
         }
         Insert: {
           drink_id: string
           id?: string
+          quantity?: number
           timestamp?: string | null
+          total_price?: number
           user_id: string
         }
         Update: {
           drink_id?: string
           id?: string
+          quantity?: number
           timestamp?: string | null
+          total_price?: number
           user_id?: string
         }
         Relationships: [
