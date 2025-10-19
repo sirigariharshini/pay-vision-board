@@ -1,23 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { TransactionList } from "@/components/dashboard/TransactionList";
 import { PaymentChart } from "@/components/dashboard/PaymentChart";
 import { TagStats } from "@/components/dashboard/TagStats";
-import { CreditCard, TrendingUp, Users, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CreditCard, TrendingUp, Users, Wallet, Coffee } from "lucide-react";
 import { format, subDays } from "date-fns";
 
+interface RfidScan {
+  id: number;
+  timestamp: string;
+  balance: number;
+  rfid_tag: string;
+}
+
 const Index = () => {
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: transactions = [], isLoading } = useQuery<RfidScan[]>({
     queryKey: ['rfid-scans'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('rfid scans')
         .select('*')
         .order('timestamp', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as RfidScan[];
     },
   });
 
@@ -74,14 +83,22 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
-              <Wallet className="h-6 w-6 text-primary-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
+                <Wallet className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Smart Payment Dashboard</h1>
+                <p className="text-sm text-muted-foreground">Real-time RFID transaction monitoring</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Smart Payment Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Real-time RFID transaction monitoring</p>
-            </div>
+            <Link to="/canteen">
+              <Button size="lg" className="gap-2">
+                <Coffee className="w-5 h-5" />
+                Open Canteen
+              </Button>
+            </Link>
           </div>
         </div>
       </header>

@@ -14,7 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
-      "rfid scans": {
+      drinks: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          drink_id: string
+          id: string
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          drink_id: string
+          id?: string
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          drink_id?: string
+          id?: string
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfid_scans: {
         Row: {
           balance: number | null
           id: number
@@ -32,6 +92,30 @@ export type Database = {
           id?: number
           rfid_tag?: string
           timestamp?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          balance: number
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          id: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
