@@ -125,6 +125,14 @@ export default function CanteenDashboard() {
 
       if (purchaseError) throw purchaseError;
 
+      // Log RFID scan to rfid_scans table
+      await supabase
+        .from("rfid_scans")
+        .insert({
+          rfid_tag: user.id,
+          balance: newBalance,
+        });
+
       // Success
       toast.success(
         `Purchased ${selectedDrink.name} for $${selectedDrink.price.toFixed(2)}. New balance: $${newBalance.toFixed(2)}`,
