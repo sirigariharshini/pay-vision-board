@@ -79,22 +79,28 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+      
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
-                <Wallet className="h-6 w-6 text-primary-foreground" />
+            <div className="flex items-center gap-3 animate-fade-in">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+                <Wallet className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Smart Payment Dashboard</h1>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Smart Payment Dashboard
+                </h1>
                 <p className="text-sm text-muted-foreground">Real-time RFID transaction monitoring</p>
               </div>
             </div>
             <Link to="/canteen">
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/50 transition-all duration-300 animate-fade-in">
                 <Coffee className="w-5 h-5" />
                 Open Canteen
               </Button>
@@ -104,9 +110,9 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         {/* Metrics Grid */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 animate-fade-in">
           <MetricCard
             title="Total Transactions"
             value={totalTransactions}
@@ -134,10 +140,10 @@ const Index = () => {
         </div>
 
         {/* Charts and Lists */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <div className="lg:col-span-2 space-y-6">
             <PaymentChart data={chartData} />
-            <TransactionList transactions={transactions.slice(0, 10)} />
+            <TransactionList />
           </div>
           <div>
             <TagStats stats={tagStats} />
