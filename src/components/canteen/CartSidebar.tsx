@@ -44,11 +44,11 @@ export default function CartSidebar({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button size="lg" className="fixed bottom-6 right-6 rounded-full shadow-lg">
+        <Button size="lg" className="fixed bottom-6 right-6 rounded-full shadow-2xl hover:shadow-primary/50 bg-gradient-to-r from-primary to-accent hover:scale-110 transition-all duration-300 animate-pulse hover:animate-none">
           <ShoppingCart className="w-5 h-5 mr-2" />
           Cart
           {totalItems > 0 && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-2 bg-white/90 text-primary font-bold">
               {totalItems}
             </Badge>
           )}
@@ -70,7 +70,7 @@ export default function CartSidebar({
             cart.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-4 rounded-lg border bg-card"
+                className="flex items-center gap-3 p-4 rounded-xl border-2 bg-gradient-to-r from-card to-card/50 hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md"
               >
                 <div className="flex-1">
                   <h4 className="font-semibold text-foreground">{item.name}</h4>

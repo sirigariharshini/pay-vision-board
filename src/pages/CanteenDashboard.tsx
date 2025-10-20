@@ -176,34 +176,47 @@ export default function CanteenDashboard() {
       : items.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4 md:p-8 pb-24">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 p-4 md:p-8 pb-24 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-3 animate-shimmer bg-[length:200%_auto]">
             Canteen Menu
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Add items to cart and scan your RFID card at checkout
           </p>
         </div>
 
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-8">
-          <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto">
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto p-2 bg-card/50 backdrop-blur-sm shadow-lg rounded-2xl border-2">
             {categories.map((category) => (
-              <TabsTrigger key={category.id} value={category.id}>
+              <TabsTrigger 
+                key={category.id} 
+                value={category.id}
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white transition-all duration-300 rounded-xl"
+              >
                 {category.label}
               </TabsTrigger>
             ))}
           </TabsList>
 
           <TabsContent value={selectedCategory} className="mt-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {filteredItems.map((item) => (
-                <ItemCard
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {filteredItems.map((item, index) => (
+                <div 
                   key={item.id}
-                  item={item}
-                  onAdd={handleAddToCart}
-                />
+                  className="animate-scale-in"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <ItemCard
+                    item={item}
+                    onAdd={handleAddToCart}
+                  />
+                </div>
               ))}
             </div>
 

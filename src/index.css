@@ -39,9 +39,15 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(264 70% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(264 70% 50%), hsl(280 70% 60%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 25% 99%));
+    --gradient-card-hover: linear-gradient(135deg, hsl(221 83% 98%), hsl(264 70% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 25% 97%), hsl(221 83% 95%), hsl(264 70% 96%));
     --shadow-soft: 0 4px 16px -4px hsl(221 83% 53% / 0.1);
+    --shadow-medium: 0 8px 24px -8px hsl(221 83% 53% / 0.2);
     --shadow-glow: 0 0 32px hsl(221 83% 53% / 0.15);
+    --shadow-glow-hover: 0 0 48px hsl(221 83% 53% / 0.3);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -90,9 +96,15 @@ All colors MUST be HSL.
     --ring: 221 83% 53%;
 
     --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(264 70% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(264 70% 50%), hsl(280 70% 60%));
     --gradient-card: linear-gradient(135deg, hsl(222 47% 9%), hsl(222 47% 11%));
+    --gradient-card-hover: linear-gradient(135deg, hsl(222 47% 12%), hsl(264 70% 15%));
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 6%), hsl(221 83% 10%), hsl(264 70% 12%));
     --shadow-soft: 0 4px 16px -4px hsl(221 83% 53% / 0.3);
+    --shadow-medium: 0 8px 24px -8px hsl(221 83% 53% / 0.4);
     --shadow-glow: 0 0 32px hsl(221 83% 53% / 0.25);
+    --shadow-glow-hover: 0 0 48px hsl(221 83% 53% / 0.5);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
