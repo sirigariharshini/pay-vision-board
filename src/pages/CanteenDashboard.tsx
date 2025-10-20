@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ItemCard from "@/components/canteen/ItemCard";
 import CartSidebar, { CartItem } from "@/components/canteen/CartSidebar";
+import RecentTransactions from "@/components/canteen/RecentTransactions";
 
 interface Item {
   id: string;
@@ -191,7 +192,9 @@ export default function CanteenDashboard() {
           </p>
         </div>
 
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto p-2 bg-card/50 backdrop-blur-sm shadow-lg rounded-2xl border-2">
             {categories.map((category) => (
               <TabsTrigger 
@@ -205,7 +208,7 @@ export default function CanteenDashboard() {
           </TabsList>
 
           <TabsContent value={selectedCategory} className="mt-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map((item, index) => (
                 <div 
                   key={item.id}
@@ -226,7 +229,13 @@ export default function CanteenDashboard() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
+            </Tabs>
+          </div>
+
+          <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <RecentTransactions />
+          </div>
+        </div>
       </div>
 
       <CartSidebar
