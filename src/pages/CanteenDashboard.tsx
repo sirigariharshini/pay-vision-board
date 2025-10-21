@@ -48,10 +48,26 @@ export default function CanteenDashboard() {
       )
       .subscribe();
 
+    // Real-time subscription for RFID scans
+    const rfidChannel = supabase
+      .channel("rfid-scans")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "rfid_scans" },
+        (payload) => {
+          const rfidTag = payload.new.rfid_tag;
+          if (rfidTag && cart.length > 0) {
+            handleCheckout(rfidTag);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(itemsChannel);
+      supabase.removeChannel(rfidChannel);
     };
-  }, []);
+  }, [cart]);
 
   const fetchItems = async () => {
     const { data } = await supabase
@@ -150,12 +166,6 @@ export default function CanteenDashboard() {
 
       await Promise.all(purchasePromises);
 
-      // Log RFID scan
-      await supabase.from("rfid_scans").insert({
-        rfid_tag: user.id,
-        balance: newBalance,
-      });
-
       // Success
       toast.success(
         `Purchase complete! Total: $${totalPrice.toFixed(2)}. New balance: $${newBalance.toFixed(2)}`,
@@ -242,7 +252,6 @@ export default function CanteenDashboard() {
         cart={cart}
         onUpdateQuantity={handleUpdateQuantity}
         onRemove={handleRemoveFromCart}
-        onCheckout={handleCheckout}
         isProcessing={isProcessing}
       />
     </div>

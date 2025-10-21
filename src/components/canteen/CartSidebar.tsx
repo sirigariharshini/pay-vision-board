@@ -2,7 +2,6 @@ import { ShoppingCart, Trash2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 export interface CartItem {
@@ -16,7 +15,6 @@ interface CartSidebarProps {
   cart: CartItem[];
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
-  onCheckout: (rfidInput: string) => void;
   isProcessing: boolean;
 }
 
@@ -24,22 +22,12 @@ export default function CartSidebar({
   cart, 
   onUpdateQuantity, 
   onRemove, 
-  onCheckout,
   isProcessing 
 }: CartSidebarProps) {
-  const [rfidInput, setRfidInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const handleCheckout = () => {
-    onCheckout(rfidInput);
-    if (!isProcessing) {
-      setRfidInput("");
-      setIsOpen(false);
-    }
-  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -122,28 +110,22 @@ export default function CartSidebar({
               <span className="text-2xl text-primary">${totalPrice.toFixed(2)}</span>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Scan RFID Card to Complete Purchase
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter RFID UID"
-                value={rfidInput}
-                onChange={(e) => setRfidInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCheckout()}
-                className="text-lg"
-              />
+            <div className="text-center p-6 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-dashed border-primary/30">
+              {isProcessing ? (
+                <div className="space-y-2">
+                  <div className="w-12 h-12 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm font-medium text-foreground">Processing payment...</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center animate-pulse">
+                    <ShoppingCart className="w-8 h-8 text-white" />
+                  </div>
+                  <p className="text-lg font-semibold text-foreground">Ready to checkout</p>
+                  <p className="text-sm text-muted-foreground">Tap your RFID card to complete purchase</p>
+                </div>
+              )}
             </div>
-
-            <Button
-              onClick={handleCheckout}
-              disabled={isProcessing || !rfidInput.trim()}
-              className="w-full"
-              size="lg"
-            >
-              {isProcessing ? "Processing..." : "Complete Purchase"}
-            </Button>
           </div>
         )}
       </SheetContent>
