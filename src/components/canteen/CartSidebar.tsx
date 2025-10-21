@@ -44,7 +44,7 @@ export default function CartSidebar({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button size="lg" className="fixed bottom-6 right-6 rounded-full shadow-2xl hover:shadow-primary/50 bg-gradient-to-r from-primary to-accent hover:scale-110 transition-all duration-300 animate-pulse hover:animate-none">
+        <Button size="lg" className="fixed bottom-6 right-6 z-40 rounded-full shadow-2xl hover:shadow-primary/50 bg-gradient-to-r from-primary to-accent hover:scale-110 transition-all duration-300 animate-pulse hover:animate-none">
           <ShoppingCart className="w-5 h-5 mr-2" />
           Cart
           {totalItems > 0 && (
@@ -55,7 +55,7 @@ export default function CartSidebar({
         </Button>
       </SheetTrigger>
       
-      <SheetContent className="w-full sm:max-w-lg flex flex-col">
+      <SheetContent className="w-full sm:max-w-lg flex flex-col z-50">
         <SheetHeader>
           <SheetTitle className="text-2xl">Your Cart</SheetTitle>
         </SheetHeader>
