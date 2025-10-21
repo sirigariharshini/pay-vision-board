@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import ItemCard from "@/components/canteen/ItemCard";
 import CartSidebar, { CartItem } from "@/components/canteen/CartSidebar";
 import RecentTransactions from "@/components/canteen/RecentTransactions";
@@ -187,62 +190,79 @@ export default function CanteenDashboard() {
       : items.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 p-4 md:p-8 pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
       
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-3 animate-shimmer bg-[length:200%_auto]">
-            Canteen Menu
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Add items to cart and scan your RFID card at checkout
-          </p>
+      {/* Header with back button */}
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center gap-4">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="hover:bg-primary/10"
+          >
+            <Link to="/">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              Canteen Menu
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Add items to cart and scan your RFID card
+            </p>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto p-2 bg-card/50 backdrop-blur-sm shadow-lg rounded-2xl border-2">
-            {categories.map((category) => (
-              <TabsTrigger 
-                key={category.id} 
-                value={category.id}
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white transition-all duration-300 rounded-xl"
-              >
-                {category.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-24 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main menu section */}
+          <div className="lg:col-span-3">
+            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="animate-fade-in">
+              <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto p-2 bg-card/50 backdrop-blur-sm shadow-lg rounded-xl border">
+                {categories.map((category) => (
+                  <TabsTrigger 
+                    key={category.id} 
+                    value={category.id}
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground transition-all duration-300 rounded-lg"
+                  >
+                    {category.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-          <TabsContent value={selectedCategory} className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.map((item, index) => (
-                <div 
-                  key={item.id}
-                  className="animate-scale-in"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <ItemCard
-                    item={item}
-                    onAdd={handleAddToCart}
-                  />
+              <TabsContent value={selectedCategory} className="mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredItems.map((item, index) => (
+                    <div 
+                      key={item.id}
+                      className="animate-scale-in"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <ItemCard
+                        item={item}
+                        onAdd={handleAddToCart}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {filteredItems.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                No items found in this category
-              </div>
-            )}
-          </TabsContent>
+                {filteredItems.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No items found in this category
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
           </div>
 
-          <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          {/* Recent transactions sidebar */}
+          <div className="lg:col-span-1 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <RecentTransactions />
           </div>
         </div>
