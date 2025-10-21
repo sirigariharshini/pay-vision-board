@@ -8,62 +8,109 @@ import { TagStats } from "@/components/dashboard/TagStats";
 import { Button } from "@/components/ui/button";
 import { CreditCard, TrendingUp, Users, Wallet, Coffee } from "lucide-react";
 import { format, subDays } from "date-fns";
+import { useEffect } from "react";
 
-interface RfidScan {
-  id: number;
+interface Purchase {
+  id: string;
+  user_id: string;
+  total_price: number;
   timestamp: string;
+  quantity: number;
+}
+
+interface User {
+  id: string;
+  name: string;
   balance: number;
-  rfid_tag: string;
 }
 
 const Index = () => {
-  const { data: transactions = [], isLoading } = useQuery<RfidScan[]>({
-    queryKey: ['rfid-scans'],
+  // Fetch purchases data
+  const { data: purchases = [], isLoading: purchasesLoading, refetch: refetchPurchases } = useQuery<Purchase[]>({
+    queryKey: ['purchases'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('rfid scans')
+      const { data, error } = await supabase
+        .from('purchases')
         .select('*')
         .order('timestamp', { ascending: false });
       
       if (error) throw error;
-      return data as RfidScan[];
+      return data as Purchase[];
     },
   });
 
+  // Fetch users data
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
+      
+      if (error) throw error;
+      return data as User[];
+    },
+  });
+
+  // Real-time subscription for purchases
+  useEffect(() => {
+    const channel = supabase
+      .channel('purchases-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'purchases' },
+        () => refetchPurchases()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchPurchases]);
+
+  const isLoading = purchasesLoading || usersLoading;
+
   // Calculate metrics
-  const totalTransactions = transactions.length;
-  const totalBalance = transactions.reduce((sum, t) => sum + (Number(t.balance) || 0), 0);
-  const uniqueTags = new Set(transactions.map(t => t.rfid_tag)).size;
-  const avgTransaction = totalTransactions > 0 ? totalBalance / totalTransactions : 0;
+  const totalTransactions = purchases.length;
+  const totalBalance = users.reduce((sum, u) => sum + (Number(u.balance) || 0), 0);
+  const activeTags = users.length;
+  const avgTransaction = totalTransactions > 0 
+    ? purchases.reduce((sum, p) => sum + (Number(p.total_price) || 0), 0) / totalTransactions 
+    : 0;
 
   // Prepare chart data (last 7 days)
   const chartData = Array.from({ length: 7 }, (_, i) => {
     const date = subDays(new Date(), 6 - i);
     const dateStr = format(date, 'MMM dd');
-    const dayTransactions = transactions.filter(t => 
-      format(new Date(t.timestamp), 'MMM dd') === dateStr
+    const dayPurchases = purchases.filter(p => 
+      format(new Date(p.timestamp), 'MMM dd') === dateStr
     );
-    const amount = dayTransactions.reduce((sum, t) => sum + (Number(t.balance) || 0), 0);
+    const amount = dayPurchases.reduce((sum, p) => sum + (Number(p.total_price) || 0), 0);
     return { date: dateStr, amount };
   });
 
-  // Tag statistics
-  const tagStats = Object.entries(
-    transactions.reduce((acc, t) => {
-      if (!acc[t.rfid_tag]) {
-        acc[t.rfid_tag] = { count: 0, total: 0 };
-      }
-      acc[t.rfid_tag].count++;
-      acc[t.rfid_tag].total += Number(t.balance) || 0;
-      return acc;
-    }, {} as Record<string, { count: number; total: number }>)
-  )
-    .map(([tag, stats]) => ({
-      tag,
-      count: stats.count,
-      totalAmount: stats.total,
-      percentage: (stats.total / totalBalance) * 100 || 0,
-    }))
+  // Tag statistics - top 5 users by spending
+  const userSpending = purchases.reduce((acc, p) => {
+    if (!acc[p.user_id]) {
+      acc[p.user_id] = { count: 0, total: 0 };
+    }
+    acc[p.user_id].count++;
+    acc[p.user_id].total += Number(p.total_price) || 0;
+    return acc;
+  }, {} as Record<string, { count: number; total: number }>);
+
+  const totalSpent = Object.values(userSpending).reduce((sum, u) => sum + u.total, 0);
+
+  const tagStats = Object.entries(userSpending)
+    .map(([userId, stats]) => {
+      const user = users.find(u => u.id === userId);
+      return {
+        tag: user?.name || userId,
+        count: stats.count,
+        totalAmount: stats.total,
+        percentage: (stats.total / totalSpent) * 100 || 0,
+      };
+    })
     .sort((a, b) => b.totalAmount - a.totalAmount)
     .slice(0, 5);
 
@@ -127,7 +174,7 @@ const Index = () => {
           />
           <MetricCard
             title="Active Tags"
-            value={uniqueTags}
+            value={activeTags}
             icon={Users}
             subtitle="Unique RFID tags"
           />
