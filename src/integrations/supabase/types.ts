@@ -83,24 +83,24 @@ export type Database = {
           },
         ]
       }
-      rfid_scans: {
+      rfid_scan: {
         Row: {
-          balance: number | null
           created_at: string
-          id: string
+          id: number
           rfid_tag: string | null
+          timestamp: number | null
         }
         Insert: {
-          balance?: number | null
           created_at?: string
-          id?: string
+          id?: number
           rfid_tag?: string | null
+          timestamp?: number | null
         }
         Update: {
-          balance?: number | null
           created_at?: string
-          id?: string
+          id?: number
           rfid_tag?: string | null
+          timestamp?: number | null
         }
         Relationships: []
       }
