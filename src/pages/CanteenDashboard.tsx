@@ -142,6 +142,56 @@ export default function CanteenDashboard() {
     toast.info("Item removed from cart");
   };
 
+  const handleManualCheckout = async () => {
+    console.log("🔍 Manual checkout initiated - checking for recent RFID scans...");
+    
+    if (cart.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Check for RFID scans in the last 10 seconds
+      const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
+      
+      const { data: recentScans, error: scanError } = await supabase
+        .from("rfid_scan")
+        .select("*")
+        .gte("created_at", tenSecondsAgo)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (scanError) {
+        console.error("❌ Error fetching RFID scans:", scanError);
+        throw scanError;
+      }
+
+      if (!recentScans || recentScans.length === 0) {
+        console.error("❌ No recent RFID scans found");
+        toast.error("RFID scan not detected", {
+          description: "Please scan your RFID card and try again"
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      const rfidTag = recentScans[0].rfid_tag;
+      console.log("✅ Found recent scan:", rfidTag);
+      
+      // Process the payment with the detected RFID
+      await handleCheckout(rfidTag);
+      
+    } catch (error) {
+      console.error("❌ Manual checkout error:", error);
+      toast.error("Checkout Failed", {
+        description: "Please try again or contact support"
+      });
+      setIsProcessing(false);
+    }
+  };
+
   const handleCheckout = async (rfidInput: string) => {
     console.log("🛒 Starting checkout process for RFID:", rfidInput);
     
@@ -336,6 +386,7 @@ export default function CanteenDashboard() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemove={handleRemoveFromCart}
         isProcessing={isProcessing}
+        onManualCheckout={handleManualCheckout}
       />
     </div>
   );

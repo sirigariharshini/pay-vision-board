@@ -16,13 +16,15 @@ interface CartSidebarProps {
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
   isProcessing: boolean;
+  onManualCheckout: () => void;
 }
 
 export default function CartSidebar({ 
   cart, 
   onUpdateQuantity, 
   onRemove, 
-  isProcessing 
+  isProcessing,
+  onManualCheckout
 }: CartSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -110,21 +112,29 @@ export default function CartSidebar({
               <span className="text-2xl text-primary">${totalPrice.toFixed(2)}</span>
             </div>
 
-            <div className="text-center p-6 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-dashed border-primary/30">
-              {isProcessing ? (
-                <div className="space-y-2">
-                  <div className="w-12 h-12 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm font-medium text-foreground">Processing payment...</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center animate-pulse">
-                    <ShoppingCart className="w-8 h-8 text-white" />
+            <div className="space-y-4">
+              <Button
+                onClick={onManualCheckout}
+                disabled={isProcessing}
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300"
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing...
                   </div>
-                  <p className="text-lg font-semibold text-foreground">Ready to checkout</p>
-                  <p className="text-sm text-muted-foreground">Tap your RFID card to complete purchase</p>
-                </div>
-              )}
+                ) : (
+                  "Complete Payment"
+                )}
+              </Button>
+
+              <div className="text-center p-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30">
+                <p className="text-sm text-muted-foreground">
+                  {isProcessing 
+                    ? "Verifying RFID scan..." 
+                    : "Click to verify RFID scan and complete payment"}
+                </p>
+              </div>
             </div>
           </div>
         )}
