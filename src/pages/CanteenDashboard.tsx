@@ -58,32 +58,45 @@ export default function CanteenDashboard() {
 
   // Separate useEffect for RFID scans to avoid re-subscribing on cart changes
   useEffect(() => {
+    console.log("Setting up RFID scan subscription...");
+    
     const rfidChannel = supabase
-      .channel("rfid-scan-changes")
+      .channel("rfid-scan-listener")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "rfid_scan" },
         (payload) => {
-          console.log("RFID scan detected:", payload.new);
+          console.log("✅ RFID scan detected from database:", payload.new);
           const rfidTag = payload.new.rfid_tag;
           
           if (!rfidTag) {
+            console.error("❌ No RFID tag in payload");
             toast.error("Invalid RFID scan - no tag found");
             return;
           }
 
+          console.log("📦 Current cart items:", cart.length);
+          
           if (cart.length === 0) {
-            toast.info("Please add items to cart before scanning");
+            toast.warning("Please add items to cart before scanning", {
+              description: `RFID: ${rfidTag}`
+            });
             return;
           }
 
-          toast.info(`RFID card detected: ${rfidTag}`);
+          toast.info(`🔍 Processing RFID: ${rfidTag}`, {
+            description: `Cart items: ${cart.length}`
+          });
+          
           handleCheckout(rfidTag);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("RFID channel status:", status);
+      });
 
     return () => {
+      console.log("Cleaning up RFID subscription");
       supabase.removeChannel(rfidChannel);
     };
   }, [cart]);
@@ -123,6 +136,8 @@ export default function CanteenDashboard() {
   };
 
   const handleCheckout = async (rfidInput: string) => {
+    console.log("🛒 Starting checkout process for RFID:", rfidInput);
+    
     if (cart.length === 0) {
       toast.error("Cart is empty");
       return;
@@ -134,20 +149,32 @@ export default function CanteenDashboard() {
     }
 
     setIsProcessing(true);
+    toast.info("Processing payment...", { duration: 1000 });
 
     try {
+      console.log("👤 Fetching user data...");
       // Fetch user by RFID
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("*")
         .eq("id", rfidInput.trim())
-        .single();
+        .maybeSingle();
 
-      if (userError || !user) {
-        toast.error("RFID card not found. Please register first.");
+      if (userError) {
+        console.error("❌ User fetch error:", userError);
+        throw userError;
+      }
+
+      if (!user) {
+        console.error("❌ User not found for RFID:", rfidInput);
+        toast.error(`RFID card not found: ${rfidInput}`, {
+          description: "Please register first"
+        });
         setIsProcessing(false);
         return;
       }
+
+      console.log("✅ User found:", user.name, "Balance:", user.balance);
 
       // Calculate total
       const totalPrice = cart.reduce(
@@ -155,24 +182,33 @@ export default function CanteenDashboard() {
         0
       );
 
+      console.log("💰 Total price:", totalPrice);
+
       // Check balance
       if (user.balance < totalPrice) {
-        toast.error(
-          `Insufficient balance. Total: $${totalPrice.toFixed(2)}, Balance: $${user.balance.toFixed(2)}`
-        );
+        console.error("❌ Insufficient balance");
+        toast.error(`Insufficient Balance - ${user.name}`, {
+          description: `Need $${totalPrice.toFixed(2)}, Available: $${user.balance.toFixed(2)}`
+        });
         setIsProcessing(false);
         return;
       }
 
       // Deduct balance
       const newBalance = user.balance - totalPrice;
+      console.log("💳 Updating balance to:", newBalance);
+      
       const { error: updateError } = await supabase
         .from("users")
         .update({ balance: newBalance })
         .eq("id", user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("❌ Balance update error:", updateError);
+        throw updateError;
+      }
 
+      console.log("📝 Creating purchase records...");
       // Insert purchase records for each item
       const purchasePromises = cart.map((item) =>
         supabase.from("purchases").insert({
@@ -185,16 +221,20 @@ export default function CanteenDashboard() {
 
       await Promise.all(purchasePromises);
 
-      // Success
-      toast.success(
-        `Purchase complete! Total: $${totalPrice.toFixed(2)}. New balance: $${newBalance.toFixed(2)}`,
-        { duration: 5000 }
-      );
+      console.log("✅ Payment complete!");
+
+      // Success with detailed info
+      toast.success(`✅ Payment Successful - ${user.name}`, {
+        description: `Paid: $${totalPrice.toFixed(2)} | New Balance: $${newBalance.toFixed(2)}`,
+        duration: 6000
+      });
 
       setCart([]);
     } catch (error) {
-      console.error("Purchase error:", error);
-      toast.error("Purchase failed. Please try again.");
+      console.error("❌ Purchase error:", error);
+      toast.error("Payment Failed", {
+        description: "Please try again or contact support"
+      });
     } finally {
       setIsProcessing(false);
     }
