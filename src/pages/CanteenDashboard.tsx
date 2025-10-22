@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,7 +56,13 @@ export default function CanteenDashboard() {
     };
   }, []);
 
-  // Separate useEffect for RFID scans to avoid re-subscribing on cart changes
+  // Use ref to access latest cart without causing re-subscriptions
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
+
+  // Separate useEffect for RFID scans - only set up once
   useEffect(() => {
     console.log("Setting up RFID scan subscription...");
     
@@ -75,9 +81,10 @@ export default function CanteenDashboard() {
             return;
           }
 
-          console.log("📦 Current cart items:", cart.length);
+          const currentCart = cartRef.current;
+          console.log("📦 Current cart items:", currentCart.length);
           
-          if (cart.length === 0) {
+          if (currentCart.length === 0) {
             toast.warning("Please add items to cart before scanning", {
               description: `RFID: ${rfidTag}`
             });
@@ -85,7 +92,7 @@ export default function CanteenDashboard() {
           }
 
           toast.info(`🔍 Processing RFID: ${rfidTag}`, {
-            description: `Cart items: ${cart.length}`
+            description: `Cart items: ${currentCart.length}`
           });
           
           handleCheckout(rfidTag);
@@ -99,7 +106,7 @@ export default function CanteenDashboard() {
       console.log("Cleaning up RFID subscription");
       supabase.removeChannel(rfidChannel);
     };
-  }, [cart]);
+  }, []); // Empty dependency array - subscribe only once
 
   const fetchItems = async () => {
     const { data } = await supabase

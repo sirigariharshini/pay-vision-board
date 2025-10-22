@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          created_at: string
+          id: number
+          timestamp: number | null
+          type: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          timestamp?: number | null
+          type?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          timestamp?: number | null
+          type?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       drinks: {
         Row: {
           category: string
