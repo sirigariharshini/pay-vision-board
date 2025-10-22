@@ -51,23 +51,39 @@ export default function CanteenDashboard() {
       )
       .subscribe();
 
-    // Real-time subscription for RFID scans
+    return () => {
+      supabase.removeChannel(itemsChannel);
+    };
+  }, []);
+
+  // Separate useEffect for RFID scans to avoid re-subscribing on cart changes
+  useEffect(() => {
     const rfidChannel = supabase
-      .channel("rfid-scans")
+      .channel("rfid-scan-changes")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "rfid_scans" },
+        { event: "INSERT", schema: "public", table: "rfid_scan" },
         (payload) => {
+          console.log("RFID scan detected:", payload.new);
           const rfidTag = payload.new.rfid_tag;
-          if (rfidTag && cart.length > 0) {
-            handleCheckout(rfidTag);
+          
+          if (!rfidTag) {
+            toast.error("Invalid RFID scan - no tag found");
+            return;
           }
+
+          if (cart.length === 0) {
+            toast.info("Please add items to cart before scanning");
+            return;
+          }
+
+          toast.info(`RFID card detected: ${rfidTag}`);
+          handleCheckout(rfidTag);
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(itemsChannel);
       supabase.removeChannel(rfidChannel);
     };
   }, [cart]);
