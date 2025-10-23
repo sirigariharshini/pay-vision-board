@@ -1,73 +1,122 @@
-# Welcome to your Lovable project
+# 💳 Rapid Payments  
+### (An IoT-Based Contactless Smart Payment System)  
 
-## Project info
+---
 
-**URL**: https://lovable.dev/projects/57285952-4806-4342-8cbe-c4e903af27e7
+## 🧾 Abstract  
+*Rapid Payments* is an IoT-based contactless payment system designed to simplify and accelerate small-scale transactions in college environments such as canteens, libraries, and stationery shops.  
 
-## How can I edit this code?
+Students can make instant payments by tapping their NFC-enabled ID cards — no cash, no mobile apps needed!  
 
-There are several ways of editing your application.
+The system integrates *ESP32, **Supabase, and a **Flask-based web dashboard* for real-time synchronization and secure payment tracking.  
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/57285952-4806-4342-8cbe-c4e903af27e7) and start prompting.
+## 🚀 Features  
+- 🔐 *NFC Authentication:* Tap-to-pay using student ID cards.  
+- ⚡ *Instant Payments:* Real-time balance validation and transaction confirmation.  
+- 🖥 *Web Dashboard:* Admin can manage users, recharge balances, and view logs.  
+- ☁ *Cloud-Connected:* Real-time sync with Supabase.  
+- 💡 *Visual Feedback:* LED and TFT display indicate transaction status.  
+- 🔊 *Audio Alerts:* Buzzer feedback for every transaction.  
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🧰 Project Requirements  
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### *Hardware*
+| Component | Description |
+|------------|-------------|
+| ESP32 / ESP8266 | Microcontroller for processing and Wi-Fi |
+| RC522 RFID Reader | Reads NFC tags or cards |
+| RFID / NFC Tags | Assigned to students |
+| 2-inch TFT Touch Display | Displays payment info and messages |
+| Buzzer | Audio feedback for success/failure |
+| LED | Status indicator |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+### *Software*
+#### *ESP32 / IoT*
+- Arduino IDE  
+- ESP32 Board Package  
+- MFRC522 Library  
+- Adafruit Fingerprint Library (R307/AS608)  
+- WiFi.h, HTTPClient.h  
+- ArduinoJson (optional)  
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+#### *Backend / Database (Supabase)*
+- Supabase Account  
+- PostgreSQL Database  
+- Supabase Auth (role-based login)  
+- Supabase API Key  
+- Row Level Security (RLS)  
+- RPC Function: deduct_balance  
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+#### *Web Dashboard*
+- Node.js v18+  
+- React.js + Tailwind CSS  
+- Supabase JS SDK  
+- Vite or Create React App  
+- React Router / React Query  
+- Chart.js / Recharts (optional)  
 
-# Step 3: Install the necessary dependencies.
-npm i
+#### *Additional Tools*
+- Postman or Insomnia  
+- Visual Studio Code  
+- Git / GitHub  
+- MQTT Broker (optional)  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## 🧩 Proposed Model  
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The system allows students to make instant payments by tapping their NFC-enabled ID cards.  
+- The *ESP32* reads card data and verifies it with *Supabase*.  
+- If the balance is sufficient, payment is processed and deducted automatically.  
+- *LED/TFT* displays payment status in real-time.  
+- *Admin Dashboard* provides full transaction visibility.  
 
-**Use GitHub Codespaces**
+This ensures a *cashless, **secure, and **real-time* transaction environment across campus.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## 🧠 Module Description  
 
-This project is built with:
+### 1️⃣ NFC Card Authentication Module  
+- Each student is assigned an NFC-enabled ID card.  
+- ESP32 verifies the unique card ID securely.  
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 2️⃣ Payment Processing Module  
+- Checks user balance from Supabase.  
+- Deducts amount automatically upon successful validation.  
 
-## How can I deploy this project?
+### 3️⃣ Display and Feedback Module  
+- Shows “Payment Successful”, “Insufficient Balance”, or “Card Error” on LED.  
 
-Simply open [Lovable](https://lovable.dev/projects/57285952-4806-4342-8cbe-c4e903af27e7) and click on Share -> Publish.
+### 4️⃣ Web Dashboard (Admin Module)  
+- Built with React.js + Supabase.  
+- Allows recharges, user management, and transaction logs.  
 
-## Can I connect a custom domain to my Lovable project?
+### 5️⃣ Database Module  
+- Real-time updates with *Supabase PostgreSQL* + *Realtime API*.  
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## ⚙ Implementation Overview  
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The *ESP32* microcontroller acts as the central controller:  
+- Reads NFC input via RC522 module.  
+- Communicates with *Supabase* backend using HTTPS.  
+- Updates user balance and transaction history instantly.  
+- Displays transaction status on TFT display and LED.  
+
+The *React-based dashboard* allows admins to monitor, recharge, and control the entire system in real-time.  
+
+---
+
+## 🧱 Technology Stack  
+
+| Layer | Technology / Tools | Purpose |
+|-------|---------------------|----------|
+| Microcontroller | ESP32 | Io
