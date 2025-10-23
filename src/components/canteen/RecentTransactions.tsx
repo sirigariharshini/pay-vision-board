@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Receipt, Clock, DollarSign, Package } from "lucide-react";
+import { Receipt, Clock, IndianRupee, Package } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Transaction {
@@ -131,7 +131,7 @@ export default function RecentTransactions() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-1">
-                      <DollarSign className="w-4 h-4 text-primary" />
+                      <IndianRupee className="w-4 h-4 text-primary" />
                       {transaction.total_price.toFixed(2)}
                     </p>
                     <p className="text-xs text-muted-foreground">

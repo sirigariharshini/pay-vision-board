@@ -30,7 +30,7 @@ export const TagStats = ({ stats }: TagStatsProps) => {
                   <span className="font-mono text-sm font-medium text-foreground">{stat.tag}</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-foreground">${stat.totalAmount.toFixed(2)}</p>
+                  <p className="text-sm font-semibold text-foreground">₹{stat.totalAmount.toFixed(2)}</p>
                   <p className="text-xs text-muted-foreground">{stat.count} transactions</p>
                 </div>
               </div>

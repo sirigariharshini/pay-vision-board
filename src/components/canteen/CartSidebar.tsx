@@ -65,7 +65,7 @@ export default function CartSidebar({
                 <div className="flex-1">
                   <h4 className="font-semibold text-foreground">{item.name}</h4>
                   <p className="text-sm text-primary font-bold">
-                    ${item.price.toFixed(2)} each
+                    ₹{item.price.toFixed(2)} each
                   </p>
                 </div>
 
@@ -109,7 +109,7 @@ export default function CartSidebar({
           <div className="border-t pt-4 space-y-4">
             <div className="flex justify-between items-center text-lg font-bold">
               <span>Total:</span>
-              <span className="text-2xl text-primary">${totalPrice.toFixed(2)}</span>
+              <span className="text-2xl text-primary">₹{totalPrice.toFixed(2)}</span>
             </div>
 
             <div className="space-y-4">

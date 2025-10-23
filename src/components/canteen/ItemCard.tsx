@@ -40,7 +40,7 @@ export default function ItemCard({ item, onAdd }: ItemCardProps) {
             {item.name}
           </h3>
           <p className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            ${item.price.toFixed(2)}
+            ₹{item.price.toFixed(2)}
           </p>
         </div>
 

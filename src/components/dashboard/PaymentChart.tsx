@@ -31,7 +31,7 @@ export const PaymentChart = ({ data }: PaymentChartProps) => {
           <YAxis 
             stroke="hsl(var(--muted-foreground))"
             fontSize={12}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `₹${value}`}
           />
           <Tooltip
             contentStyle={{
@@ -39,7 +39,7 @@ export const PaymentChart = ({ data }: PaymentChartProps) => {
               border: "1px solid hsl(var(--border))",
               borderRadius: "var(--radius)",
             }}
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+            formatter={(value: number) => [`₹${value.toFixed(2)}`, "Amount"]}
           />
           <Area
             type="monotone"

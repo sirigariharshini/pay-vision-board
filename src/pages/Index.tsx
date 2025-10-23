@@ -168,7 +168,7 @@ const Index = () => {
           />
           <MetricCard
             title="Total Balance"
-            value={`$${totalBalance.toFixed(2)}`}
+            value={`₹${totalBalance.toFixed(2)}`}
             icon={TrendingUp}
             trend={{ value: 12.5, isPositive: true }}
           />
@@ -180,7 +180,7 @@ const Index = () => {
           />
           <MetricCard
             title="Avg Transaction"
-            value={`$${avgTransaction.toFixed(2)}`}
+            value={`₹${avgTransaction.toFixed(2)}`}
             icon={Wallet}
             subtitle="Per transaction"
           />

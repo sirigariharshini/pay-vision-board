@@ -245,7 +245,7 @@ export default function CanteenDashboard() {
       if (user.balance < totalPrice) {
         console.error("❌ Insufficient balance");
         toast.error(`Insufficient Balance - ${user.name}`, {
-          description: `Need $${totalPrice.toFixed(2)}, Available: $${user.balance.toFixed(2)}`
+          description: `Need ₹${totalPrice.toFixed(2)}, Available: ₹${user.balance.toFixed(2)}`
         });
         setIsProcessing(false);
         return;
@@ -282,7 +282,7 @@ export default function CanteenDashboard() {
 
       // Success with detailed info
       toast.success(`✅ Payment Successful - ${user.name}`, {
-        description: `Paid: $${totalPrice.toFixed(2)} | New Balance: $${newBalance.toFixed(2)}`,
+        description: `Paid: ₹${totalPrice.toFixed(2)} | New Balance: ₹${newBalance.toFixed(2)}`,
         duration: 6000
       });
 

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Receipt, Clock, DollarSign, Package, User } from "lucide-react";
+import { Receipt, Clock, IndianRupee, Package, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface PurchaseTransaction {
@@ -139,7 +139,7 @@ export const TransactionList = ({ transactions: _unused }: TransactionListProps)
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-1">
-                      <DollarSign className="w-4 h-4 text-primary" />
+                      <IndianRupee className="w-4 h-4 text-primary" />
                       {purchase.total_price.toFixed(2)}
                     </p>
                   </div>
