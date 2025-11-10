@@ -6,7 +6,7 @@ import { TransactionList } from "@/components/dashboard/TransactionList";
 import { PaymentChart } from "@/components/dashboard/PaymentChart";
 import { TagStats } from "@/components/dashboard/TagStats";
 import { Button } from "@/components/ui/button";
-import { CreditCard, TrendingUp, Users, Wallet, Coffee } from "lucide-react";
+import { CreditCard, TrendingUp, Users, Wallet, Coffee, Settings } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { useEffect } from "react";
 
@@ -146,12 +146,20 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Real-time RFID transaction monitoring</p>
               </div>
             </div>
-            <Link to="/canteen">
-              <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/50 transition-all duration-300 animate-fade-in">
-                <Coffee className="w-5 h-5" />
-                Open Canteen
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to="/admin">
+                <Button size="lg" variant="outline" className="gap-2 animate-fade-in">
+                  <Settings className="w-5 h-5" />
+                  Admin Panel
+                </Button>
+              </Link>
+              <Link to="/canteen">
+                <Button size="lg" className="gap-2 bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/50 transition-all duration-300 animate-fade-in">
+                  <Coffee className="w-5 h-5" />
+                  Open Canteen
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>

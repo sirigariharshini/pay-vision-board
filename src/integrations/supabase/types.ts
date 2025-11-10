@@ -65,6 +65,96 @@ export type Database = {
         }
         Relationships: []
       }
+      Face_Scans: {
+        Row: {
+          created_at: string
+          embedding: Json | null
+          face_id: number | null
+          id: number
+          name: string | null
+          similarity: number | null
+          timestamp: string | null
+        }
+        Insert: {
+          created_at?: string
+          embedding?: Json | null
+          face_id?: number | null
+          id?: number
+          name?: string | null
+          similarity?: number | null
+          timestamp?: string | null
+        }
+        Update: {
+          created_at?: string
+          embedding?: Json | null
+          face_id?: number | null
+          id?: number
+          name?: string | null
+          similarity?: number | null
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
+      Face_Users: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      Known_Faces: {
+        Row: {
+          constraint: number
+          created_at: string
+          embedding: Json | null
+          id: number
+          name: string
+        }
+        Insert: {
+          constraint: number
+          created_at?: string
+          embedding?: Json | null
+          id?: number
+          name: string
+        }
+        Update: {
+          constraint?: number
+          created_at?: string
+          embedding?: Json | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      known_faces2: {
+        Row: {
+          embedding: Json | null
+          id: number
+          image_url: string | null
+          name: string | null
+        }
+        Insert: {
+          embedding?: Json | null
+          id?: number
+          image_url?: string | null
+          name?: string | null
+        }
+        Update: {
+          embedding?: Json | null
+          id?: number
+          image_url?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       purchases: {
         Row: {
           drink_id: string
@@ -132,6 +222,8 @@ export type Database = {
         Row: {
           balance: number
           created_at: string | null
+          face_embedding: Json | null
+          face_image_url: string | null
           id: string
           name: string
           updated_at: string | null
@@ -139,6 +231,8 @@ export type Database = {
         Insert: {
           balance?: number
           created_at?: string | null
+          face_embedding?: Json | null
+          face_image_url?: string | null
           id: string
           name: string
           updated_at?: string | null
@@ -146,11 +240,51 @@ export type Database = {
         Update: {
           balance?: number
           created_at?: string | null
+          face_embedding?: Json | null
+          face_image_url?: string | null
           id?: string
           name?: string
           updated_at?: string | null
         }
         Relationships: []
+      }
+      verification_events: {
+        Row: {
+          created_at: string | null
+          face_verified: boolean
+          id: string
+          rfid_tag: string
+          rfid_verified: boolean
+          user_id: string
+          verification_timestamp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          face_verified?: boolean
+          id?: string
+          rfid_tag: string
+          rfid_verified?: boolean
+          user_id: string
+          verification_timestamp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          face_verified?: boolean
+          id?: string
+          rfid_tag?: string
+          rfid_verified?: boolean
+          user_id?: string
+          verification_timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
