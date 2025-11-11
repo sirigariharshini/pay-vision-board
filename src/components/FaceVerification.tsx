@@ -27,14 +27,27 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 }
+        video: { width: 640, height: 480, facingMode: 'user' }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
+        
+        // Wait for video to have actual dimensions
+        await new Promise<void>((resolve) => {
+          const checkVideo = setInterval(() => {
+            if (videoRef.current && videoRef.current.videoWidth > 0) {
+              clearInterval(checkVideo);
+              console.log('✅ Camera ready:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
+              resolve();
+            }
+          }, 100);
+        });
       }
       setStream(mediaStream);
     } catch (err) {
       console.error('Error accessing camera:', err);
+      toast.error('Camera access failed');
       onFailed();
     }
   };
@@ -114,22 +127,24 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
       
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         console.log(`🔍 Face detection attempt ${attempt}/${maxRetries}`);
+        toast.info(`Detecting face... (${attempt}/${maxRetries})`);
         currentEmbedding = await extractFaceEmbedding(videoRef.current);
         
         if (currentEmbedding) {
           console.log('✅ Face detected successfully!');
+          toast.success('Face found! Verifying...');
           break;
         }
         
         if (attempt < maxRetries) {
           console.log('⏳ Retrying face detection...');
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 800));
         }
       }
       
       if (!currentEmbedding) {
-        console.error('❌ No face detected in camera after multiple attempts');
-        toast.error('No face detected. Please ensure your face is clearly visible, well-lit, and centered in the camera.');
+        console.error('❌ No face detected in camera');
+        toast.error('No face detected. Please look directly at the camera.');
         setVerificationStatus('failed');
         setTimeout(() => {
           stopCamera();
