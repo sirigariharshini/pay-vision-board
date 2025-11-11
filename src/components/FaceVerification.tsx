@@ -65,19 +65,32 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
     try {
       console.log('🔍 Verification - Looking for RFID Tag:', rfidTag);
       
-      // Get user's stored face embedding
+      // Get user's stored face data (support both face_embedding and face_image_url)
       const { data: user, error } = await supabase
         .from('users')
-        .select('id, name, face_embedding')
+        .select('id, name, face_embedding, face_image_url')
         .eq('id', rfidTag)
         .maybeSingle();
 
       console.log('👤 Verification - User found:', user);
       console.log('🔐 Verification - Has face_embedding:', !!user?.face_embedding);
+      console.log('🖼️ Verification - Has face_image_url:', !!user?.face_image_url);
 
-      if (error || !user || !user.face_embedding) {
-        console.error('❌ User not found or no face registered:', error);
-        toast.error(`No user registered with RFID: ${rfidTag}. Please register in Admin Panel first.`);
+      if (error || !user) {
+        console.error('❌ User not found:', error);
+        toast.error(`No user registered with RFID: ${rfidTag}`);
+        setVerificationStatus('failed');
+        setTimeout(() => {
+          stopCamera();
+          onFailed();
+        }, 2000);
+        return;
+      }
+
+      // Check if user has either face_embedding or face_image_url
+      if (!user.face_embedding && !user.face_image_url) {
+        console.error('❌ No face data registered');
+        toast.error('No face registered. Please upload a face image to Supabase users table.');
         setVerificationStatus('failed');
         setTimeout(() => {
           stopCamera();
@@ -88,7 +101,7 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
 
       console.log('✅ User record found:', { id: user.id, name: user.name });
 
-      // Extract current face embedding
+      // Extract current face embedding from live camera
       const currentEmbedding = await extractFaceEmbedding(videoRef.current);
       if (!currentEmbedding) {
         console.error('❌ No face detected in camera');
@@ -106,8 +119,33 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         timestamp: currentEmbedding.timestamp
       });
 
+      let storedEmbedding = user.face_embedding;
+
+      // If no face_embedding but has face_image_url, extract embedding from image
+      if (!storedEmbedding && user.face_image_url) {
+        console.log('📥 Loading face from image URL:', user.face_image_url);
+        toast.info('Loading registered face image...');
+        
+        try {
+          storedEmbedding = await extractEmbeddingFromImage(user.face_image_url);
+          if (!storedEmbedding) {
+            throw new Error('Could not extract face from image');
+          }
+          console.log('✅ Extracted embedding from stored image');
+        } catch (imgErr) {
+          console.error('❌ Failed to load face from image:', imgErr);
+          toast.error('Could not process stored face image');
+          setVerificationStatus('failed');
+          setTimeout(() => {
+            stopCamera();
+            onFailed();
+          }, 2000);
+          return;
+        }
+      }
+
       // Compare embeddings
-      const similarity = compareFaces(user.face_embedding as any, currentEmbedding);
+      const similarity = compareFaces(storedEmbedding as any, currentEmbedding);
       console.log('🔍 Face similarity score:', similarity);
 
       // Threshold for face match (stricter for security)
@@ -147,6 +185,57 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         onFailed();
       }, 2000);
     }
+  };
+
+  const extractEmbeddingFromImage = async (imageUrl: string) => {
+    return new Promise<any>((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = async () => {
+        try {
+          // Create canvas and draw image
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0);
+          
+          // Create temporary video element from canvas
+          const tempVideo = document.createElement('video');
+          tempVideo.width = img.width;
+          tempVideo.height = img.height;
+          tempVideo.autoplay = true;
+          tempVideo.muted = true;
+          
+          const stream = (canvas as any).captureStream(1);
+          tempVideo.srcObject = stream;
+          
+          await tempVideo.play();
+          
+          // Wait a bit for video to be ready
+          await new Promise(r => setTimeout(r, 100));
+          
+          // Extract embedding
+          const embedding = await extractFaceEmbedding(tempVideo);
+          
+          // Cleanup
+          tempVideo.pause();
+          stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+          
+          resolve(embedding);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = imageUrl;
+    });
   };
 
   return (
