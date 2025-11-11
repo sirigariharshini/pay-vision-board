@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Camera, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFaceDetection } from '@/hooks/useFaceDetection';
+import { toast } from 'sonner';
 
 interface FaceVerificationProps {
   rfidTag: string;
@@ -62,15 +63,21 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
     }
 
     try {
+      console.log('🔍 Verification - Looking for RFID Tag:', rfidTag);
+      
       // Get user's stored face embedding
       const { data: user, error } = await supabase
         .from('users')
         .select('id, name, face_embedding')
         .eq('id', rfidTag)
-        .single();
+        .maybeSingle();
+
+      console.log('👤 Verification - User found:', user);
+      console.log('🔐 Verification - Has face_embedding:', !!user?.face_embedding);
 
       if (error || !user || !user.face_embedding) {
-        console.error('User not found or no face registered:', error);
+        console.error('❌ User not found or no face registered:', error);
+        toast.error(`No user registered with RFID: ${rfidTag}. Please register in Admin Panel first.`);
         setVerificationStatus('failed');
         setTimeout(() => {
           stopCamera();
@@ -78,11 +85,14 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         }, 2000);
         return;
       }
+
+      console.log('✅ User record found:', { id: user.id, name: user.name });
 
       // Extract current face embedding
       const currentEmbedding = await extractFaceEmbedding(videoRef.current);
       if (!currentEmbedding) {
-        console.error('No face detected in camera');
+        console.error('❌ No face detected in camera');
+        toast.error('No face detected. Please ensure your face is visible and well-lit.');
         setVerificationStatus('failed');
         setTimeout(() => {
           stopCamera();
@@ -91,15 +101,22 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         return;
       }
 
+      console.log('📸 Current face embedding captured:', {
+        descriptorLength: currentEmbedding.descriptor.length,
+        timestamp: currentEmbedding.timestamp
+      });
+
       // Compare embeddings
       const similarity = compareFaces(user.face_embedding as any, currentEmbedding);
-      console.log('Face similarity:', similarity);
+      console.log('🔍 Face similarity score:', similarity);
 
       // Threshold for face match (stricter for security)
       const SIMILARITY_THRESHOLD = 0.75;
 
       if (similarity >= SIMILARITY_THRESHOLD) {
+        console.log('✅ Face verification SUCCESS');
         setVerificationStatus('success');
+        toast.success(`Welcome ${user.name}!`);
         
         // Record verification event
         await supabase.from('verification_events').insert({
@@ -114,6 +131,8 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
           onVerified(user.id);
         }, 1500);
       } else {
+        console.log(`❌ Face verification FAILED - similarity ${similarity.toFixed(3)} below threshold ${SIMILARITY_THRESHOLD}`);
+        toast.error(`Face doesn't match. Similarity: ${(similarity * 100).toFixed(1)}%`);
         setVerificationStatus('failed');
         setTimeout(() => {
           stopCamera();

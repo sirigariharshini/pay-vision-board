@@ -134,32 +134,51 @@ export const FaceRegistration = () => {
         .from('users')
         .select('*')
         .eq('id', rfidTag)
-        .single();
+        .maybeSingle();
+
+      console.log('📝 Registration - RFID Tag:', rfidTag);
+      console.log('👤 Registration - Name:', name);
+      console.log('🔍 Existing user found:', existingUser);
+      console.log('📊 Face embedding descriptor length:', avgEmbedding.descriptor.length);
 
       if (existingUser) {
         // Update existing user
-        const { error: updateError } = await supabase
+        console.log('🔄 Updating existing user with new face data');
+        const { data: updatedUser, error: updateError } = await supabase
           .from('users')
           .update({
             name,
             face_embedding: avgEmbedding as any
           })
-          .eq('id', rfidTag);
+          .eq('id', rfidTag)
+          .select()
+          .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('❌ Update error:', updateError);
+          throw updateError;
+        }
+        console.log('✅ User updated successfully:', updatedUser);
         toast.success(`User face updated with ${CAPTURE_COUNT} training images!`);
       } else {
         // Create new user
-        const { error: insertError } = await supabase
+        console.log('➕ Creating new user');
+        const { data: newUser, error: insertError } = await supabase
           .from('users')
           .insert([{
             id: rfidTag,
             name,
             balance: 0,
             face_embedding: avgEmbedding as any
-          }]);
+          }])
+          .select()
+          .single();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('❌ Insert error:', insertError);
+          throw insertError;
+        }
+        console.log('✅ User registered successfully:', newUser);
         toast.success(`User registered with ${CAPTURE_COUNT} training images!`);
       }
 
