@@ -208,51 +208,82 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
 
   const extractEmbeddingFromImage = async (imageUrl: string) => {
     return new Promise<any>((resolve, reject) => {
+      console.log('🖼️ Starting image load from URL:', imageUrl);
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
       img.onload = async () => {
+        console.log('✅ Image loaded successfully:', img.width, 'x', img.height);
         try {
           // Create canvas and draw image
           const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
+          const targetSize = 640; // Standard size for face detection
+          const scale = Math.min(targetSize / img.width, targetSize / img.height);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          
           const ctx = canvas.getContext('2d');
           if (!ctx) {
             reject(new Error('Could not get canvas context'));
             return;
           }
-          ctx.drawImage(img, 0, 0);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          console.log('✅ Canvas created:', canvas.width, 'x', canvas.height);
           
           // Create temporary video element from canvas
           const tempVideo = document.createElement('video');
-          tempVideo.width = img.width;
-          tempVideo.height = img.height;
+          tempVideo.width = canvas.width;
+          tempVideo.height = canvas.height;
           tempVideo.autoplay = true;
           tempVideo.muted = true;
+          tempVideo.playsInline = true;
           
-          const stream = (canvas as any).captureStream(1);
+          // Add video to DOM temporarily (required for some browsers)
+          tempVideo.style.position = 'fixed';
+          tempVideo.style.top = '-9999px';
+          tempVideo.style.left = '-9999px';
+          document.body.appendChild(tempVideo);
+          
+          const stream = (canvas as any).captureStream(25);
           tempVideo.srcObject = stream;
           
+          console.log('⏳ Waiting for video to play...');
           await tempVideo.play();
           
-          // Wait a bit for video to be ready
-          await new Promise(r => setTimeout(r, 100));
+          // Wait for video to be fully ready
+          await new Promise(r => setTimeout(r, 500));
           
+          console.log('🔍 Extracting face embedding from video...');
           // Extract embedding
           const embedding = await extractFaceEmbedding(tempVideo);
+          
+          console.log('📊 Embedding result:', embedding ? 'Success' : 'Failed');
+          if (embedding) {
+            console.log('📏 Descriptor length:', embedding.descriptor.length);
+          }
           
           // Cleanup
           tempVideo.pause();
           stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+          document.body.removeChild(tempVideo);
+          
+          if (!embedding) {
+            reject(new Error('No face detected in stored image'));
+            return;
+          }
           
           resolve(embedding);
         } catch (err) {
+          console.error('❌ Error in extractEmbeddingFromImage:', err);
           reject(err);
         }
       };
       
-      img.onerror = () => reject(new Error('Failed to load image'));
+      img.onerror = (e) => {
+        console.error('❌ Failed to load image:', e);
+        reject(new Error('Failed to load image - check CORS and URL'));
+      };
+      
       img.src = imageUrl;
     });
   };
