@@ -24,6 +24,9 @@ export const FaceRegistration = () => {
   const startCamera = async () => {
     try {
       setIsVideoReady(false);
+      console.log('🎥 Starting camera...');
+      toast.info('Initializing camera...');
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           width: { ideal: 640 },
@@ -32,40 +35,70 @@ export const FaceRegistration = () => {
         }
       });
       
+      console.log('✅ Camera stream obtained');
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         
-        // Wait for video metadata to load and ensure video has dimensions
-        await new Promise<void>((resolve) => {
+        // Wait for video to be ready with timeout
+        const videoReadyPromise = new Promise<void>((resolve, reject) => {
           const video = videoRef.current!;
+          let resolved = false;
           
           const onLoadedMetadata = () => {
-            // Ensure video has valid dimensions
+            if (resolved) return;
+            console.log('📹 Video metadata loaded:', { 
+              width: video.videoWidth, 
+              height: video.videoHeight,
+              readyState: video.readyState
+            });
+            
             if (video.videoWidth > 0 && video.videoHeight > 0) {
+              resolved = true;
               setIsVideoReady(true);
-              toast.success('Camera ready! You can now capture faces.');
+              toast.success('Camera ready!');
               resolve();
             }
           };
           
-          if (video.readyState >= 2) {
-            // Metadata already loaded
+          // Set timeout for video initialization
+          const timeout = setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              console.warn('⏰ Video initialization timeout - forcing ready state');
+              setIsVideoReady(true);
+              toast.success('Camera ready!');
+              resolve();
+            }
+          }, 3000); // 3 second timeout
+          
+          if (video.readyState >= 2 && video.videoWidth > 0) {
+            clearTimeout(timeout);
             onLoadedMetadata();
           } else {
-            video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
+            video.addEventListener('loadedmetadata', () => {
+              clearTimeout(timeout);
+              onLoadedMetadata();
+            }, { once: true });
           }
         });
         
-        await videoRef.current.play().catch(err => {
-          console.error('Error playing video:', err);
-        });
+        await Promise.race([
+          videoReadyPromise,
+          videoRef.current.play().catch(err => {
+            console.error('Error playing video:', err);
+          })
+        ]);
       }
       
       setStream(mediaStream);
       setIsCapturing(true);
+      console.log('✅ Camera fully initialized');
     } catch (err) {
-      console.error('Error accessing camera:', err);
+      console.error('❌ Error accessing camera:', err);
       toast.error('Failed to access camera. Please grant camera permissions.');
+      setIsVideoReady(false);
+      setIsCapturing(false);
     }
   };
 
@@ -251,11 +284,19 @@ export const FaceRegistration = () => {
           </div>
         </div>
 
+        {detectorLoading && (
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              ⏳ Loading face detection models... This may take a moment on first load.
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-2">
           {!isCapturing ? (
             <Button onClick={startCamera} disabled={detectorLoading}>
               <Camera className="w-4 h-4 mr-2" />
-              Start Camera
+              {detectorLoading ? 'Loading AI Models...' : 'Start Camera'}
             </Button>
           ) : (
             <>
