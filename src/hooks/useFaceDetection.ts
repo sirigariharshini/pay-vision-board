@@ -34,12 +34,26 @@ export const useFaceDetection = () => {
   }, []);
 
   const detectFaces = async (videoElement: HTMLVideoElement) => {
-    if (!detector) return null;
+    if (!detector) {
+      console.error('❌ Detector not initialized');
+      return null;
+    }
+    if (!videoElement) {
+      console.error('❌ Video element is null');
+      return null;
+    }
+    if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+      console.error('❌ Video has no dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+      return null;
+    }
+    
     try {
-      const faces = await detector.estimateFaces(videoElement);
+      console.log('🔍 Attempting face detection on video:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+      const faces = await detector.estimateFaces(videoElement, { flipHorizontal: false });
+      console.log('📊 Detection result:', faces?.length || 0, 'faces found');
       return faces;
     } catch (err) {
-      console.error('Error detecting faces:', err);
+      console.error('❌ Error detecting faces:', err);
       return null;
     }
   };

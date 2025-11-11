@@ -122,21 +122,43 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
+      // Ensure video is truly playing with valid frames
+      console.log('📹 Video state:', {
+        paused: videoRef.current.paused,
+        width: videoRef.current.videoWidth,
+        height: videoRef.current.videoHeight,
+        readyState: videoRef.current.readyState
+      });
+
+      // Wait extra time for video frames to stabilize
+      toast.info('Initializing camera feed...');
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       // Retry face detection multiple times with live feedback
       let currentEmbedding = null;
-      const maxRetries = 8;
+      const maxRetries = 10;
       
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         console.log(`🔍 Face detection attempt ${attempt}/${maxRetries}`);
+        console.log('🎥 Video element check:', {
+          exists: !!videoRef.current,
+          width: videoRef.current?.videoWidth,
+          height: videoRef.current?.videoHeight,
+          paused: videoRef.current?.paused
+        });
         
         // Check if face is visible first
         const faces = await detectFaces(videoRef.current);
+        console.log('👤 Faces detected:', faces?.length || 0);
+        
         if (faces && faces.length > 0) {
           setFaceDetected(true);
-          toast.success(`Face found! (${attempt}/${maxRetries})`);
+          console.log('✅ Face bounding box:', faces[0].box);
+          toast.success(`Face found! Verifying... (${attempt}/${maxRetries})`);
         } else {
           setFaceDetected(false);
-          toast.info(`Position your face in the frame... (${attempt}/${maxRetries})`);
+          console.log('⚠️ No faces detected in frame');
+          toast.info(`Position your face clearly... (${attempt}/${maxRetries})`);
         }
         
         currentEmbedding = await extractFaceEmbedding(videoRef.current);
@@ -149,7 +171,7 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         
         if (attempt < maxRetries) {
           console.log('⏳ Retrying face detection...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1500));
         }
       }
       
