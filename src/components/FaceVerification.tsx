@@ -95,8 +95,8 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
       const similarity = compareFaces(user.face_embedding as any, currentEmbedding);
       console.log('Face similarity:', similarity);
 
-      // Threshold for face match (adjust based on testing)
-      const SIMILARITY_THRESHOLD = 0.7;
+      // Threshold for face match (stricter for security)
+      const SIMILARITY_THRESHOLD = 0.75;
 
       if (similarity >= SIMILARITY_THRESHOLD) {
         setVerificationStatus('success');

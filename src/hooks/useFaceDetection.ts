@@ -65,7 +65,7 @@ export const useFaceDetection = () => {
     const desc1 = embedding1.descriptor;
     const desc2 = embedding2.descriptor;
     
-    if (desc1.length !== desc2.length) return 1.0;
+    if (desc1.length !== desc2.length) return 0;
     
     let sum = 0;
     for (let i = 0; i < desc1.length; i++) {
@@ -73,9 +73,13 @@ export const useFaceDetection = () => {
     }
     
     const distance = Math.sqrt(sum);
-    // Normalize to similarity score (0-1, where 1 is identical)
-    const maxDistance = 1000; // Adjust based on testing
-    return Math.max(0, 1 - (distance / maxDistance));
+    
+    // Normalize distance to 0-1 range where 1 is identical
+    // Using a more conservative normalization based on typical face keypoint distances
+    const normalizedDistance = distance / (desc1.length * 100);
+    const similarity = Math.max(0, Math.min(1, 1 - normalizedDistance));
+    
+    return similarity;
   };
 
   return {

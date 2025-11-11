@@ -13,8 +13,12 @@ export const FaceRegistration = () => {
   const [rfidTag, setRfidTag] = useState('');
   const [isCapturing, setIsCapturing] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [captureProgress, setCaptureProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { extractFaceEmbedding, isLoading: detectorLoading } = useFaceDetection();
+
+  const CAPTURE_COUNT = 5; // Capture 5 frames for better accuracy like the Python version
 
   const startCamera = async () => {
     try {
@@ -46,12 +50,38 @@ export const FaceRegistration = () => {
       return;
     }
 
+    setIsProcessing(true);
+    setCaptureProgress(0);
+
     try {
-      const embedding = await extractFaceEmbedding(videoRef.current);
-      if (!embedding) {
-        toast.error('No face detected. Please position your face in the camera');
-        return;
+      // Capture multiple embeddings for better accuracy (like Python version)
+      const embeddings = [];
+      toast.info(`Capturing ${CAPTURE_COUNT} images for training...`);
+      
+      for (let i = 0; i < CAPTURE_COUNT; i++) {
+        setCaptureProgress(((i + 1) / CAPTURE_COUNT) * 100);
+        
+        // Wait between captures for slight variation
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const embedding = await extractFaceEmbedding(videoRef.current!);
+        if (!embedding) {
+          toast.error(`Face not detected in capture ${i + 1}/${CAPTURE_COUNT}. Please keep face visible.`);
+          setIsProcessing(false);
+          setCaptureProgress(0);
+          return;
+        }
+        embeddings.push(embedding);
       }
+
+      // Average the embeddings for more robust recognition
+      const avgEmbedding = {
+        descriptor: embeddings[0].descriptor.map((_, idx) => {
+          const sum = embeddings.reduce((acc, emb) => acc + emb.descriptor[idx], 0);
+          return sum / embeddings.length;
+        }),
+        timestamp: Date.now()
+      };
 
       // Check if user already exists
       const { data: existingUser } = await supabase
@@ -66,12 +96,12 @@ export const FaceRegistration = () => {
           .from('users')
           .update({
             name,
-            face_embedding: embedding as any
+            face_embedding: avgEmbedding as any
           })
           .eq('id', rfidTag);
 
         if (updateError) throw updateError;
-        toast.success('User face updated successfully!');
+        toast.success(`User face updated with ${CAPTURE_COUNT} training images!`);
       } else {
         // Create new user
         const { error: insertError } = await supabase
@@ -80,20 +110,23 @@ export const FaceRegistration = () => {
             id: rfidTag,
             name,
             balance: 0,
-            face_embedding: embedding as any
+            face_embedding: avgEmbedding as any
           }]);
 
         if (insertError) throw insertError;
-        toast.success('User registered successfully!');
+        toast.success(`User registered with ${CAPTURE_COUNT} training images!`);
       }
 
       // Reset form
       setName('');
       setRfidTag('');
+      setCaptureProgress(0);
       stopCamera();
     } catch (err) {
       console.error('Error registering user:', err);
       toast.error('Failed to register user');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -161,16 +194,33 @@ export const FaceRegistration = () => {
             </Button>
           ) : (
             <>
-              <Button onClick={stopCamera} variant="outline">
+              <Button onClick={stopCamera} variant="outline" disabled={isProcessing}>
                 Stop Camera
               </Button>
-              <Button onClick={captureAndRegister} disabled={!name || !rfidTag}>
+              <Button onClick={captureAndRegister} disabled={!name || !rfidTag || isProcessing}>
                 <UserPlus className="w-4 h-4 mr-2" />
-                Capture & Register
+                {isProcessing ? 'Processing...' : 'Capture & Register'}
               </Button>
             </>
           )}
         </div>
+
+        {isProcessing && (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground text-center">
+              Capturing multiple images for better accuracy...
+            </p>
+            <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="bg-primary h-full transition-all duration-300 ease-out"
+                style={{ width: `${captureProgress}%` }}
+              />
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              {Math.round(captureProgress)}% complete ({CAPTURE_COUNT} images)
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
