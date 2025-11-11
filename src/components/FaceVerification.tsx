@@ -123,18 +123,37 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
 
       // If no face_embedding but has face_image_url, extract embedding from image
       if (!storedEmbedding && user.face_image_url) {
-        console.log('📥 Loading face from image URL:', user.face_image_url);
+        // Clean up the URL (remove extra quotes if present)
+        let imageUrl = user.face_image_url.trim();
+        if (imageUrl.startsWith('"') && imageUrl.endsWith('"')) {
+          imageUrl = imageUrl.slice(1, -1);
+        }
+        
+        console.log('📥 Loading face from image URL:', imageUrl);
+        
+        // Check if it's a valid URL (not a local file path)
+        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+          console.error('❌ Invalid image URL - must be a public URL, not a local file path');
+          toast.error('Face image must be uploaded to Supabase Storage. Please upload the image to the known_faces bucket and store the public URL.');
+          setVerificationStatus('failed');
+          setTimeout(() => {
+            stopCamera();
+            onFailed();
+          }, 3000);
+          return;
+        }
+        
         toast.info('Loading registered face image...');
         
         try {
-          storedEmbedding = await extractEmbeddingFromImage(user.face_image_url);
+          storedEmbedding = await extractEmbeddingFromImage(imageUrl);
           if (!storedEmbedding) {
             throw new Error('Could not extract face from image');
           }
           console.log('✅ Extracted embedding from stored image');
         } catch (imgErr) {
           console.error('❌ Failed to load face from image:', imgErr);
-          toast.error('Could not process stored face image');
+          toast.error('Could not load face image. Please ensure it\'s a valid public URL.');
           setVerificationStatus('failed');
           setTimeout(() => {
             stopCamera();
