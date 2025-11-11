@@ -31,6 +31,7 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         video: { width: 640, height: 480, facingMode: 'user' }
       });
       if (videoRef.current) {
+        videoRef.current.crossOrigin = 'anonymous';
         videoRef.current.srcObject = mediaStream;
         await videoRef.current.play();
         
@@ -115,11 +116,22 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
 
       console.log('✅ User record found:', { id: user.id, name: user.name });
 
-      // Wait for face detector to be ready
+      // Wait for face detector models to be ready
       if (detectorLoading) {
-        console.log('⏳ Waiting for face detector to load...');
-        toast.info('Initializing face detection...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('⏳ Waiting for face-api.js models to load...');
+        toast.info('Loading face detection models...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
+      if (detectorLoading) {
+        console.error('❌ Models still not loaded after waiting');
+        toast.error('Face detection models failed to load. Check console.');
+        setVerificationStatus('failed');
+        setTimeout(() => {
+          stopCamera();
+          onFailed();
+        }, 2000);
+        return;
       }
 
       // Ensure video is truly playing with valid frames
@@ -153,7 +165,7 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
         
         if (faces && faces.length > 0) {
           setFaceDetected(true);
-          console.log('✅ Face bounding box:', faces[0].box);
+          console.log('✅ Face bounding box:', faces[0].detection.box);
           toast.success(`Face found! Verifying... (${attempt}/${maxRetries})`);
         } else {
           setFaceDetected(false);
@@ -374,6 +386,7 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
           ref={videoRef}
           autoPlay
           playsInline
+          crossOrigin="anonymous"
           className="w-full h-full object-cover"
         />
         
