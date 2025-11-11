@@ -18,7 +18,8 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'failed'>('idle');
   const [faceDetected, setFaceDetected] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { detectFaces, extractFaceEmbedding, compareFaces, isLoading: detectorLoading } = useFaceDetection();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { detectFaces, extractFaceEmbedding, compareFaces, drawDetections, isLoading: detectorLoading } = useFaceDetection();
 
   useEffect(() => {
     startVerification();
@@ -65,10 +66,23 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
     await startCamera();
     setIsVerifying(true);
     
+    // Start visual debugging overlay
+    startVisualDebug();
+    
     // Wait for camera and face detector to fully initialize
     setTimeout(() => {
       verifyFace();
     }, 2000);
+  };
+
+  const startVisualDebug = () => {
+    const interval = setInterval(() => {
+      if (videoRef.current && canvasRef.current && verificationStatus === 'idle') {
+        drawDetections(videoRef.current, canvasRef.current);
+      } else {
+        clearInterval(interval);
+      }
+    }, 100);
   };
 
   const verifyFace = async () => {
@@ -390,12 +404,18 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
           className="w-full h-full object-cover"
         />
         
+        {/* Canvas overlay for face detection visualization */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+        />
+        
         {/* Face guide overlay */}
         {verificationStatus === 'idle' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className={`w-48 h-60 border-4 rounded-full transition-colors ${
               faceDetected ? 'border-green-500' : 'border-primary'
-            }`} style={{ opacity: 0.7 }} />
+            }`} style={{ opacity: 0.5 }} />
           </div>
         )}
         
