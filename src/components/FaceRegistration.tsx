@@ -36,63 +36,57 @@ export const FaceRegistration = () => {
       });
       
       console.log('✅ Camera stream obtained');
+      setStream(mediaStream);
+      setIsCapturing(true);
       
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+        const video = videoRef.current;
+        video.srcObject = mediaStream;
         
-        // Wait for video to be ready with timeout
-        const videoReadyPromise = new Promise<void>((resolve, reject) => {
-          const video = videoRef.current!;
-          let resolved = false;
-          
-          const onLoadedMetadata = () => {
-            if (resolved) return;
-            console.log('📹 Video metadata loaded:', { 
-              width: video.videoWidth, 
+        console.log('📹 Attaching stream to video element');
+        
+        // Wait for video to load and play
+        await new Promise<void>((resolve) => {
+          const handleCanPlay = () => {
+            console.log('📹 Video can play:', {
+              width: video.videoWidth,
               height: video.videoHeight,
               readyState: video.readyState
             });
             
-            if (video.videoWidth > 0 && video.videoHeight > 0) {
-              resolved = true;
-              setIsVideoReady(true);
-              toast.success('Camera ready!');
-              resolve();
-            }
+            video.play()
+              .then(() => {
+                console.log('▶️ Video playing successfully');
+                setIsVideoReady(true);
+                toast.success('Camera ready!');
+                resolve();
+              })
+              .catch((err) => {
+                console.error('❌ Play error:', err);
+                toast.error('Failed to start video preview');
+                resolve();
+              });
           };
           
-          // Set timeout for video initialization
-          const timeout = setTimeout(() => {
-            if (!resolved) {
-              resolved = true;
-              console.warn('⏰ Video initialization timeout - forcing ready state');
-              setIsVideoReady(true);
-              toast.success('Camera ready!');
-              resolve();
-            }
-          }, 3000); // 3 second timeout
-          
-          if (video.readyState >= 2 && video.videoWidth > 0) {
-            clearTimeout(timeout);
-            onLoadedMetadata();
+          if (video.readyState >= 3) {
+            // Video already ready
+            handleCanPlay();
           } else {
-            video.addEventListener('loadedmetadata', () => {
-              clearTimeout(timeout);
-              onLoadedMetadata();
-            }, { once: true });
+            video.addEventListener('canplay', handleCanPlay, { once: true });
+            
+            // Fallback timeout
+            setTimeout(() => {
+              if (!isVideoReady) {
+                console.warn('⏰ Video timeout, attempting play anyway');
+                video.play().catch(console.error);
+                setIsVideoReady(true);
+                resolve();
+              }
+            }, 2000);
           }
         });
-        
-        await Promise.race([
-          videoReadyPromise,
-          videoRef.current.play().catch(err => {
-            console.error('Error playing video:', err);
-          })
-        ]);
       }
       
-      setStream(mediaStream);
-      setIsCapturing(true);
       console.log('✅ Camera fully initialized');
     } catch (err) {
       console.error('❌ Error accessing camera:', err);
