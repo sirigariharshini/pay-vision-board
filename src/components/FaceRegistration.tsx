@@ -15,6 +15,7 @@ export const FaceRegistration = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [captureProgress, setCaptureProgress] = useState(0);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { extractFaceEmbedding, isLoading: detectorLoading } = useFaceDetection();
 
@@ -22,6 +23,7 @@ export const FaceRegistration = () => {
 
   const startCamera = async () => {
     try {
+      setIsVideoReady(false);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           width: { ideal: 640 },
@@ -32,7 +34,28 @@ export const FaceRegistration = () => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        // Wait for video to be ready and play it
+        
+        // Wait for video metadata to load and ensure video has dimensions
+        await new Promise<void>((resolve) => {
+          const video = videoRef.current!;
+          
+          const onLoadedMetadata = () => {
+            // Ensure video has valid dimensions
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              setIsVideoReady(true);
+              toast.success('Camera ready! You can now capture faces.');
+              resolve();
+            }
+          };
+          
+          if (video.readyState >= 2) {
+            // Metadata already loaded
+            onLoadedMetadata();
+          } else {
+            video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
+          }
+        });
+        
         await videoRef.current.play().catch(err => {
           console.error('Error playing video:', err);
         });
@@ -40,7 +63,6 @@ export const FaceRegistration = () => {
       
       setStream(mediaStream);
       setIsCapturing(true);
-      toast.success('Camera started successfully');
     } catch (err) {
       console.error('Error accessing camera:', err);
       toast.error('Failed to access camera. Please grant camera permissions.');
@@ -53,11 +75,24 @@ export const FaceRegistration = () => {
       setStream(null);
     }
     setIsCapturing(false);
+    setIsVideoReady(false);
   };
 
   const captureAndRegister = async () => {
     if (!videoRef.current || !name || !rfidTag) {
       toast.error('Please fill all fields and start camera');
+      return;
+    }
+
+    if (!isVideoReady) {
+      toast.error('Please wait for camera to be ready');
+      return;
+    }
+
+    // Double-check video has valid dimensions
+    const video = videoRef.current;
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      toast.error('Video not ready. Please wait a moment and try again.');
       return;
     }
 
@@ -208,9 +243,12 @@ export const FaceRegistration = () => {
               <Button onClick={stopCamera} variant="outline" disabled={isProcessing}>
                 Stop Camera
               </Button>
-              <Button onClick={captureAndRegister} disabled={!name || !rfidTag || isProcessing}>
+              <Button 
+                onClick={captureAndRegister} 
+                disabled={!name || !rfidTag || isProcessing || !isVideoReady}
+              >
                 <UserPlus className="w-4 h-4 mr-2" />
-                {isProcessing ? 'Processing...' : 'Capture & Register'}
+                {isProcessing ? 'Processing...' : !isVideoReady ? 'Camera Loading...' : 'Capture & Register'}
               </Button>
             </>
           )}
