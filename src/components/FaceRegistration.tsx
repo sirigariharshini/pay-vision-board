@@ -23,16 +23,27 @@ export const FaceRegistration = () => {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 }
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user'
+        }
       });
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Wait for video to be ready and play it
+        await videoRef.current.play().catch(err => {
+          console.error('Error playing video:', err);
+        });
       }
+      
       setStream(mediaStream);
       setIsCapturing(true);
+      toast.success('Camera started successfully');
     } catch (err) {
       console.error('Error accessing camera:', err);
-      toast.error('Failed to access camera');
+      toast.error('Failed to access camera. Please grant camera permissions.');
     }
   };
 
