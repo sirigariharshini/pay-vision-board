@@ -17,7 +17,7 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'failed'>('idle');
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { extractFaceEmbedding, compareFaces } = useFaceDetection();
+  const { extractFaceEmbedding, compareFaces, isLoading: detectorLoading } = useFaceDetection();
 
   useEffect(() => {
     startVerification();
@@ -50,10 +50,10 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
     await startCamera();
     setIsVerifying(true);
     
-    // Wait for camera to initialize
+    // Wait for camera and face detector to fully initialize
     setTimeout(() => {
       verifyFace();
-    }, 1000);
+    }, 2000);
   };
 
   const verifyFace = async () => {
@@ -101,11 +101,35 @@ export const FaceVerification = ({ rfidTag, onVerified, onFailed }: FaceVerifica
 
       console.log('✅ User record found:', { id: user.id, name: user.name });
 
-      // Extract current face embedding from live camera
-      const currentEmbedding = await extractFaceEmbedding(videoRef.current);
+      // Wait for face detector to be ready
+      if (detectorLoading) {
+        console.log('⏳ Waiting for face detector to load...');
+        toast.info('Initializing face detection...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      // Retry face detection multiple times
+      let currentEmbedding = null;
+      const maxRetries = 5;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`🔍 Face detection attempt ${attempt}/${maxRetries}`);
+        currentEmbedding = await extractFaceEmbedding(videoRef.current);
+        
+        if (currentEmbedding) {
+          console.log('✅ Face detected successfully!');
+          break;
+        }
+        
+        if (attempt < maxRetries) {
+          console.log('⏳ Retrying face detection...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
       if (!currentEmbedding) {
-        console.error('❌ No face detected in camera');
-        toast.error('No face detected. Please ensure your face is visible and well-lit.');
+        console.error('❌ No face detected in camera after multiple attempts');
+        toast.error('No face detected. Please ensure your face is clearly visible, well-lit, and centered in the camera.');
         setVerificationStatus('failed');
         setTimeout(() => {
           stopCamera();
